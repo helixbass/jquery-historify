@@ -18,8 +18,6 @@
            "a:internal:not(.no-ajaxy)"
           contentSelector:
            "#content"
-          waitForHide:
-           no
           hide:
            ( done ) ->
              plug.content
@@ -29,35 +27,51 @@
                          ,
                           800,
                           done
+
           stopHide: ->
              plug.content
                  .stop yes,
                        yes
           show:
-           ( $data ) ->
+           ( $dataContent ) ->
              plug.content
-                 .css( "opacity",
-                       100 )
-                 .show()
-
+                 .html( $dataContent.html())
+                 .animate
+                          opacity:
+                           1
+                         ,
+                          800
+          afterShow: ->
           scrollOptions:
            duration:
             800
            easing:
             "swing"
+          matchingLinkSelector: ( url, \
+                                  relativeUrl ) ->
+             """
+              a[href='#{ relativeUrl }'],
+              a[href='/#{ relativeUrl }'],
+              a[href='#{ url }']
+             """
+          navActiveFilter: ( _option, \
+                             url, \
+                             relativeUrl ) ->
+            ->
+             $( this )
+              .has _option( "matchingLinkSelector" )( url,
+                                                      relativeUrl )
           updateNav: ( _option, \
                        url, \
                        relativeUrl ) ->
             $( _option "navSelector" )
              .removeClass( _option "navActiveClass" )
-             .has( """
-                    a[href^='#{ relativeUrl }'],
-                    a[href^='/#{ relativeUrl }'],
-                    a[href^='#{ url }']
-                   """ )
-             .addClass _option "navActiveClass"
+             .filter( _option( "navActiveFilter" )( _option,
+                                                    url,
+                                                    relativeUrl ))
+               .addClass _option "navActiveClass"
           navSelector:
-           "nav > ul > li"
+           "nav li"
           navActiveClass:
            "active"
 
@@ -68,7 +82,9 @@
 
           $.expr[ ":" ]
            .internal =
-            ( url ) ->
+            ( obj ) ->
+              alert obj
+              url = $( obj ).attr "href"
               startsWith( url,
                           rootUrl ) or
                url.indexOf( ":" ) is -1
@@ -100,6 +116,8 @@
             $ _option "contentSelector"
 
           addScript = ->
+            $.getScript $( this )
+                         .attr( "src" )
 
           setTitle = ->
             document.title = $( this )
@@ -173,11 +191,10 @@
 
                    $dataContent = $data.find _option "contentSelector"
 
-                   $scripts = $dataContent.find ".document-script"
+                   $scripts = $data.find ".document-script"
                    $scripts.detach() if $scripts.length
 
-                   contentHtml = $dataContent.html()
-                   abort unless contentHtml
+                   abort unless $dataContent.html()
 
                    relativeUrl = url.replace rootUrl,
                                              ""
@@ -186,10 +203,11 @@
                                             url,
                                             relativeUrl )
 
-                   $content
-                    .html( contentHtml )
+                   _option( "stopHide" )?()
 
-                   _option( "show" )( $data )
+                   _option( "show" )( $dataContent )
+
+                   _option( "afterShow" )()
 
                    $data
                     .find( ".document-title" )
@@ -207,13 +225,13 @@
                    pageTracker?._trackPageview relativeUrl
                    reinvigorate?.ajax_track?( url )
 
-                 if _option "waitForHide"
+                 unless _option "stopHide"
                    $.when( jqXHR,
                            $.Deferred(( dfd ) ->
                                         _option( "hide" )( dfd.resolve ))
                             .promise())
                     .done( done )
                  else
-                   _option( "stopHide" )()
+                   _option( "hide" ) ->
                    jqXHR.done done
 ) jQuery
