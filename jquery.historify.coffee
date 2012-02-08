@@ -15,7 +15,7 @@
   $.historify = plug =
       options:
           linkSelector:
-           "a:internal:not(.no-ajaxy)"
+           "nav li a"
           contentSelector:
            "#content"
           hide:
@@ -83,7 +83,6 @@
           $.expr[ ":" ]
            .internal =
             ( obj ) ->
-              alert obj
               url = $( obj ).attr "href"
               startsWith( url,
                           rootUrl ) or
@@ -111,9 +110,9 @@
                  event.preventDefault()
                  no
 
+          plug.contentSelector = _option "contentSelector"
           $content =
-           plug.content =
-            $ _option "contentSelector"
+           plug.content = $ plug.contentSelector
 
           addScript = ->
             $.getScript $( this )
