@@ -32,10 +32,12 @@
              plug.content
                  .stop yes,
                        yes
-          show:
+          attach:
            ( $dataContent ) ->
              plug.content
                  .html( $dataContent.html())
+          show: ->
+             plug.content
                  .animate
                           opacity:
                            1
@@ -205,7 +207,11 @@
 
                    _option( "stopHide" )?()
 
-                   _option( "show" )( $dataContent )
+                   _option( "beforeAttach" )?( $dataContent )
+                   _option( "attach" )( $dataContent )
+                   plug.content
+                       .trigger "attach"
+                   _option( "show" )()
 
                    _option( "afterShow" )()
 
