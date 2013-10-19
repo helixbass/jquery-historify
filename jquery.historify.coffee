@@ -18,14 +18,18 @@
            "nav li a"
           contentSelector:
            "#content"
+          fadeDuration:
+           800
           hide:
-           ( done ) ->
+           ( done,
+             _option ) ->
              plug.content
                  .animate
                           opacity:
                            0
                          ,
-                          800,
+                          _option 'fadeDuration'
+                         ,
                           done
 
           stopHide: ->
@@ -36,13 +40,13 @@
            ( $dataContent ) ->
              plug.content
                  .html( $dataContent.html())
-          show: ->
+          show: ( _option ) ->
              plug.content
                  .animate
                           opacity:
                            1
                          ,
-                          800
+                          _option 'fadeDuration'
           afterShow: ->
           scrollOptions:
            duration:
@@ -135,40 +139,40 @@
                                    " &amp; " )
             catch Exception
           clean = ( data ) ->
-            String( data )
-                  .replace( ///
-                             <\!DOCTYPE
-                             [^\>] *
-                            ///i,
-                            "" )
-                  .replace( ///
-                             <
-                             (
-                              html |
-                              head |
-                              body |
-                              title |
-                              meta |
-                              script
-                             )
-                             (
-                              [\s\>]
-                             )
-                            ///gi,
-                            "<div class='document-$1'$2" )
-                  .replace( ///
-                             </
-                             (
-                              html |
-                              head |
-                              body |
-                              title |
-                              meta |
-                              script
-                             )
-                             \>
-                            ///gi,
-                            "</div>" )
+            $.trim( String( data ))
+             .replace( ///
+                        <\!DOCTYPE
+                        [^\>] *
+                       ///i,
+                       "" )
+             .replace( ///
+                        <
+                        (
+                         html |
+                         head |
+                         body |
+                         title |
+                         meta |
+                         script
+                        )
+                        (
+                         [\s\>]
+                        )
+                       ///gi,
+                       "<div class='document-$1'$2" )
+             .replace( ///
+                        </
+                        (
+                         html |
+                         head |
+                         body |
+                         title |
+                         meta |
+                         script
+                        )
+                        \>
+                       ///gi,
+                       "</div>" )
 
           $( window )
            .on "statechange",
@@ -195,7 +199,7 @@
                    $scripts = $data.find ".document-script"
                    $scripts.detach() if $scripts.length
 
-                   abort unless $dataContent.html()
+                   abort() unless $dataContent.html()
 
                    relativeUrl = url.replace rootUrl,
                                              ""
@@ -210,7 +214,7 @@
                    _option( "attach" )( $dataContent )
                    plug.content
                        .trigger "attach"
-                   _option( "show" )()
+                   _option( "show" ) _option
 
                    _option( "afterShow" )()
 
@@ -233,10 +237,12 @@
                  unless _option "stopHide"
                    $.when( jqXHR,
                            $.Deferred(( dfd ) ->
-                                        _option( "hide" )( dfd.resolve ))
+                                        _option( "hide" )( dfd.resolve,
+                                                           _option ))
                             .promise())
                     .done( done )
                  else
-                   _option( "hide" ) ->
+                   _option( "hide" ) ( -> ),
+                                     _option
                    jqXHR.done done
 ) jQuery
